@@ -67,6 +67,7 @@ pipeline {
         }
       }
       steps{
+        sh "helm init --client-only"
         sh "helm repo add helm http://helm.dihalk.com"
         sh "helm repo update"
         sh 'helm upgrade --recreate-pods --install --kubeconfig /data/config country-airport  helm/country-airport-service-helm  --set image.pullPolicy=Always,image.repository=$dockerImage,image.tag=latest --namespace country-airport-api-prod'
