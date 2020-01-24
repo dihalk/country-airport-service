@@ -49,11 +49,13 @@ pipeline {
       }
     }
     stage('Deploying helm chart') {
+      when { expression { params.Release } }
       agent {
         docker {
           label 'linux'
           image 'dtzar/helm-kubectl:3.0.2'
           args '''-v /var/run/docker.sock:/var/run/docker.sock \
+                    -v /data/config:/data/config \
                     -h $HOSTNAME \
                     --cap-add SYS_ADMIN \
                     --cap-add DAC_READ_SEARCH
@@ -61,12 +63,9 @@ pipeline {
         }
       }
       steps{
-        sh "helm"
-        //sh "helm repo add helm http://helm.dihalk.com/"
-        //sh "helm update"
-        // configFileProvider([configFile(fileId: 'k8_kubeconfig')]) {
-        //   sh 'helm upgrade --recreate-pods --install --kubeconfig $k8_kubeconfig country-airport  helm/country-airport-service-helm  --set image.pullPolicy=Always,image.repository=$registry,image.tag=$BUILD_NUMBER --namespace country-airport-api-prod'
-        // }
+        sh "helm repo add helm http://helm.dihalk.com"
+        sh "helm repo update"
+        sh 'helm upgrade --recreate-pods --install --kubeconfig /data/config country-airport  helm/country-airport-service-helm  --set image.pullPolicy=Always,image.repository=$dockerImage,image.tag=latest --namespace country-airport-api-prod'
       }
     }
   }
