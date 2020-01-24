@@ -12,6 +12,7 @@ pipeline {
   }
   stages {
     stage('Checkout') {
+      when { expression { !params.Release } }
       steps {
         checkout([
           $class: 'GitSCM',
@@ -23,6 +24,7 @@ pipeline {
       }
     }
     stage('Building image') {
+      when { expression { !params.Release } }
       steps{
         script {
           app = docker.build(dockerImage)
@@ -33,6 +35,7 @@ pipeline {
       }
     }
     stage('Publishing Image') {
+      when { expression { !params.Release } }
       steps{
         script {
           docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
@@ -43,6 +46,7 @@ pipeline {
       }
     }
     stage('Remove Unused docker image') {
+      when { expression { !params.Release } }
       steps{
         sh "docker image prune --force"
         sh "docker volume prune --force"
@@ -53,7 +57,7 @@ pipeline {
       agent {
         docker {
           label 'linux'
-          image 'dtzar/helm-kubectl:3.0.2'
+          image 'dtzar/helm-kubectl:2.16.1'
           args '''-v /var/run/docker.sock:/var/run/docker.sock \
                     -v /data/config:/data/config \
                     -h $HOSTNAME \
